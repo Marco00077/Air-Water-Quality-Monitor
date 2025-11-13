@@ -1,6 +1,11 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import pandas as pd
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 class QualityMonitorPro:
     def __init__(self, root):
@@ -29,7 +34,7 @@ class QualityMonitorPro:
     
     def create_ui(self):
         # Top Navigation Bar
-        nav_bar = tk.Frame(self.root, bg=self.colors['primary'], height=70)
+        nav_bar = tk.Frame(self.root, bg=self.colors['primary'], height=60)
         nav_bar.pack(fill=tk.X)
         nav_bar.pack_propagate(False)
         
@@ -39,7 +44,7 @@ class QualityMonitorPro:
         tk.Label(
             nav_content,
             text="Quality Monitor Pro",
-            font=('Segoe UI', 24, 'bold'),
+            font=('Segoe UI', 22, 'bold'),
             bg=self.colors['primary'],
             fg='white'
         ).pack(side=tk.LEFT, padx=20)
@@ -47,39 +52,39 @@ class QualityMonitorPro:
         tk.Label(
             nav_content,
             text="Environmental Analysis Platform",
-            font=('Segoe UI', 11),
+            font=('Segoe UI', 10),
             bg=self.colors['primary'],
             fg='#bfdbfe'
         ).pack(side=tk.LEFT, padx=10)
         
         # Main Content Area
         content = tk.Frame(self.root, bg=self.colors['bg_main'])
-        content.pack(fill=tk.BOTH, expand=True, padx=40, pady=30)
+        content.pack(fill=tk.BOTH, expand=True, padx=30, pady=20)
         
         # Control Panel Card
         control_card = self.create_card(content)
-        control_card.pack(fill=tk.X, pady=(0, 25))
+        control_card.pack(fill=tk.X, pady=(0, 15))
         
         # Title
         tk.Label(
             control_card,
             text="Analysis Configuration",
-            font=('Segoe UI', 16, 'bold'),
+            font=('Segoe UI', 14, 'bold'),
             bg=self.colors['bg_card'],
             fg=self.colors['text_primary']
-        ).pack(anchor=tk.W, padx=30, pady=(25, 20))
+        ).pack(anchor=tk.W, padx=25, pady=(20, 15))
         
         # Monitor Type Selection
         type_frame = tk.Frame(control_card, bg=self.colors['bg_card'])
-        type_frame.pack(padx=30, pady=(0, 20))
+        type_frame.pack(padx=25, pady=(0, 15))
         
         tk.Label(
             type_frame,
             text="Select Analysis Type:",
-            font=('Segoe UI', 12),
+            font=('Segoe UI', 11),
             bg=self.colors['bg_card'],
             fg=self.colors['text_secondary']
-        ).pack(anchor=tk.W, pady=(0, 12))
+        ).pack(anchor=tk.W, pady=(0, 10))
         
         self.monitor_type = tk.StringVar(value="air")
         
@@ -89,7 +94,7 @@ class QualityMonitorPro:
         self.air_btn = self.create_toggle_button(
             btn_container, "Air Quality", "air"
         )
-        self.air_btn.pack(side=tk.LEFT, padx=(0, 12))
+        self.air_btn.pack(side=tk.LEFT, padx=(0, 10))
         
         self.water_btn = self.create_toggle_button(
             btn_container, "Water Quality", "water", selected=False
@@ -97,51 +102,91 @@ class QualityMonitorPro:
         self.water_btn.pack(side=tk.LEFT)
         
         # Divider
-        tk.Frame(control_card, bg=self.colors['border'], height=1).pack(fill=tk.X, padx=30, pady=20)
+        tk.Frame(control_card, bg=self.colors['border'], height=1).pack(fill=tk.X, padx=25, pady=15)
         
         # Import Button
         import_frame = tk.Frame(control_card, bg=self.colors['bg_card'])
-        import_frame.pack(padx=30, pady=(0, 25))
+        import_frame.pack(padx=25, pady=(0, 20))
         
         import_btn = tk.Button(
             import_frame,
             text="📂  Import CSV Data",
-            font=('Segoe UI', 13, 'bold'),
+            font=('Segoe UI', 12, 'bold'),
             bg=self.colors['primary'],
             fg='white',
             activebackground=self.colors['primary_hover'],
             activeforeground='white',
             relief=tk.FLAT,
-            padx=45,
-            pady=16,
+            padx=40,
+            pady=14,
             cursor='hand2',
             borderwidth=0,
             command=self.load_csv
         )
         import_btn.pack()
         
-        # Results Section
+        # Results Section with Tabs
         tk.Label(
             content,
             text="Analysis Results",
-            font=('Segoe UI', 16, 'bold'),
+            font=('Segoe UI', 14, 'bold'),
             bg=self.colors['bg_main'],
             fg=self.colors['text_primary']
-        ).pack(anchor=tk.W, pady=(0, 15))
+        ).pack(anchor=tk.W, pady=(0, 10))
+        
+        # Tab Container
+        tab_container = tk.Frame(content, bg=self.colors['bg_main'])
+        tab_container.pack(fill=tk.BOTH, expand=True)
+        
+        # Tab Buttons
+        tab_buttons = tk.Frame(tab_container, bg=self.colors['bg_main'])
+        tab_buttons.pack(fill=tk.X, pady=(0, 8))
+        
+        self.report_tab_btn = tk.Button(
+            tab_buttons,
+            text="📄 Report",
+            font=('Segoe UI', 10, 'bold'),
+            bg=self.colors['primary'],
+            fg='white',
+            activebackground=self.colors['primary_hover'],
+            relief=tk.FLAT,
+            padx=20,
+            pady=8,
+            cursor='hand2',
+            borderwidth=0,
+            command=lambda: self.switch_tab('report')
+        )
+        self.report_tab_btn.pack(side=tk.LEFT, padx=(0, 6))
+        
+        self.graph_tab_btn = tk.Button(
+            tab_buttons,
+            text="📊 Graphs",
+            font=('Segoe UI', 10, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=self.colors['text_secondary'],
+            activebackground=self.colors['primary_hover'],
+            relief=tk.FLAT,
+            padx=20,
+            pady=8,
+            cursor='hand2',
+            borderwidth=0,
+            command=lambda: self.switch_tab('graph')
+        )
+        self.graph_tab_btn.pack(side=tk.LEFT)
         
         # Results Card
-        results_card = self.create_card(content)
+        results_card = self.create_card(tab_container)
         results_card.pack(fill=tk.BOTH, expand=True)
         
-        # Text widget with scrollbar
-        text_container = tk.Frame(results_card, bg=self.colors['bg_card'])
-        text_container.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        # Report Tab Content
+        self.report_frame = tk.Frame(results_card, bg=self.colors['bg_card'])
+        self.report_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
-        scrollbar = tk.Scrollbar(text_container)
+        scrollbar = tk.Scrollbar(self.report_frame)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         self.results_text = tk.Text(
-            text_container,
+            self.report_frame,
             font=('Segoe UI', 11),
             bg=self.colors['bg_card'],
             fg=self.colors['text_primary'],
@@ -155,6 +200,11 @@ class QualityMonitorPro:
         self.results_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=self.results_text.yview)
         
+        # Graph Tab Content
+        self.graph_frame = tk.Frame(results_card, bg=self.colors['bg_card'])
+        
+        self.current_tab = 'report'
+        self.current_data = None
         self.show_welcome()
     
     def create_card(self, parent):
@@ -173,14 +223,14 @@ class QualityMonitorPro:
         btn = tk.Button(
             parent,
             text=text,
-            font=('Segoe UI', 12),
+            font=('Segoe UI', 11),
             bg=self.colors['primary'] if selected else self.colors['bg_main'],
             fg='white' if selected else self.colors['text_secondary'],
             activebackground=self.colors['primary_hover'],
             activeforeground='white',
             relief=tk.FLAT,
-            padx=35,
-            pady=14,
+            padx=30,
+            pady=12,
             cursor='hand2',
             borderwidth=0,
             command=lambda: self.select_type(value)
@@ -196,6 +246,33 @@ class QualityMonitorPro:
         else:
             self.water_btn.config(bg=self.colors['primary'], fg='white')
             self.air_btn.config(bg=self.colors['bg_main'], fg=self.colors['text_secondary'])
+    
+    def switch_tab(self, tab_name):
+        """Switch between report and graph tabs"""
+        self.current_tab = tab_name
+        
+        if tab_name == 'report':
+            self.report_tab_btn.config(bg=self.colors['primary'], fg='white')
+            self.graph_tab_btn.config(bg=self.colors['bg_card'], fg=self.colors['text_secondary'])
+            self.graph_frame.pack_forget()
+            self.report_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        else:
+            self.graph_tab_btn.config(bg=self.colors['primary'], fg='white')
+            self.report_tab_btn.config(bg=self.colors['bg_card'], fg=self.colors['text_secondary'])
+            self.report_frame.pack_forget()
+            self.graph_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+            if self.current_data is not None:
+                print("Showing graphs...")  # Debug
+                self.show_graphs()
+            else:
+                print("No data loaded yet")  # Debug
+                tk.Label(
+                    self.graph_frame,
+                    text="No data loaded. Please import a CSV file first.",
+                    font=('Segoe UI', 13),
+                    bg=self.colors['bg_card'],
+                    fg=self.colors['text_secondary']
+                ).pack(expand=True, pady=100)
     
     def show_welcome(self):
         """Display welcome message"""
@@ -229,9 +306,13 @@ including temperature, humidity, pH, dissolved oxygen, turbidity, and more.
         if file_path:
             try:
                 df = pd.read_csv(file_path)
+                self.current_data = df
                 self.results_text.config(state=tk.NORMAL)
                 self.analyze_data(df)
                 self.results_text.config(state=tk.DISABLED)
+                
+                # Switch to report tab
+                self.switch_tab('report')
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to load CSV: {str(e)}")
     
@@ -239,15 +320,15 @@ including temperature, humidity, pH, dissolved oxygen, turbidity, and more.
         """Analyze the loaded data"""
         self.results_text.delete(1.0, tk.END)
         
-        # Configure text tags
-        self.results_text.tag_config("title", foreground=self.colors['primary'], font=('Segoe UI', 20, 'bold'))
-        self.results_text.tag_config("heading", foreground=self.colors['text_primary'], font=('Segoe UI', 15, 'bold'))
-        self.results_text.tag_config("param_label", foreground=self.colors['text_secondary'], font=('Segoe UI', 11))
-        self.results_text.tag_config("param_value", foreground=self.colors['primary'], font=('Segoe UI', 11, 'bold'))
-        self.results_text.tag_config("good", foreground=self.colors['success'], font=('Segoe UI', 12, 'bold'))
-        self.results_text.tag_config("moderate", foreground=self.colors['warning'], font=('Segoe UI', 12, 'bold'))
-        self.results_text.tag_config("bad", foreground=self.colors['danger'], font=('Segoe UI', 12, 'bold'))
-        self.results_text.tag_config("divider", foreground=self.colors['border'])
+        # Configure text tags with high contrast colors
+        self.results_text.tag_config("title", foreground='#1e40af', font=('Segoe UI', 22, 'bold'))
+        self.results_text.tag_config("heading", foreground='#0f172a', font=('Segoe UI', 16, 'bold'))
+        self.results_text.tag_config("param_label", foreground='#334155', font=('Segoe UI', 12))
+        self.results_text.tag_config("param_value", foreground='#1e40af', font=('Segoe UI', 12, 'bold'))
+        self.results_text.tag_config("good", foreground='#059669', font=('Segoe UI', 13, 'bold'))
+        self.results_text.tag_config("moderate", foreground='#d97706', font=('Segoe UI', 13, 'bold'))
+        self.results_text.tag_config("bad", foreground='#dc2626', font=('Segoe UI', 13, 'bold'))
+        self.results_text.tag_config("divider", foreground='#cbd5e1')
         
         if self.monitor_type.get() == "air":
             self.analyze_air_quality(df)
@@ -461,6 +542,217 @@ including temperature, humidity, pH, dissolved oxygen, turbidity, and more.
                 else:
                     self.results_text.insert(tk.END, "✗ POOR\n", "bad")
                 self.results_text.insert(tk.END, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n", "divider")
+    
+    def show_graphs(self):
+        """Display graphs for the current data"""
+        print("show_graphs called")  # Debug
+        
+        # Clear previous graphs
+        for widget in self.graph_frame.winfo_children():
+            widget.destroy()
+        
+        if self.current_data is None:
+            print("No data available")  # Debug
+            tk.Label(
+                self.graph_frame,
+                text="No data to display. Please import a CSV file first.",
+                font=('Segoe UI', 12),
+                bg=self.colors['bg_card'],
+                fg=self.colors['text_secondary']
+            ).pack(expand=True)
+            return
+        
+        print(f"Data shape: {self.current_data.shape}")  # Debug
+        print(f"Columns: {self.current_data.columns.tolist()}")  # Debug
+        
+        # Create scrollable canvas for graphs
+        canvas = tk.Canvas(self.graph_frame, bg=self.colors['bg_card'], highlightthickness=0)
+        scrollbar = tk.Scrollbar(self.graph_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=self.colors['bg_card'])
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Enable mouse wheel scrolling
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        
+        # Generate graphs based on monitor type
+        if self.monitor_type.get() == "air":
+            self.create_air_quality_graphs(scrollable_frame)
+        else:
+            self.create_water_quality_graphs(scrollable_frame)
+        
+        # Update scroll region after graphs are created
+        scrollable_frame.update_idletasks()
+        canvas.configure(scrollregion=canvas.bbox("all"))
+        
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+    
+    def create_air_quality_graphs(self, parent):
+        """Create graphs for air quality data"""
+        print("Creating air quality graphs")  # Debug
+        df = self.current_data
+        params = {k.lower(): k for k in df.columns}
+        print(f"Parameters found: {list(params.keys())}")  # Debug
+        
+        plot_count = 0
+        plots_data = []
+        
+        # Collect available parameters
+        if 'pm2.5' in params or 'pm25' in params:
+            col = params.get('pm2.5', params.get('pm25'))
+            plots_data.append(('PM2.5 (µg/m³)', df[col], [0, 12, 35.4]))
+            plot_count += 1
+        
+        if 'pm10' in params:
+            plots_data.append(('PM10 (µg/m³)', df[params['pm10']], [0, 54, 154]))
+            plot_count += 1
+        
+        if 'temp' in params or 'temperature' in params:
+            col = params.get('temp', params.get('temperature'))
+            plots_data.append(('Temperature (°C)', df[col], [10, 15, 25, 30]))
+            plot_count += 1
+        
+        if 'humidity' in params:
+            plots_data.append(('Humidity (%)', df[params['humidity']], [20, 30, 60, 70]))
+            plot_count += 1
+        
+        if 'co2' in params:
+            plots_data.append(('CO2 (ppm)', df[params['co2']], [0, 1000, 2000]))
+            plot_count += 1
+        
+        if plot_count == 0:
+            tk.Label(
+                parent,
+                text="No compatible parameters found for graphing.",
+                font=('Segoe UI', 12),
+                bg=self.colors['bg_card'],
+                fg=self.colors['text_secondary']
+            ).pack(expand=True, pady=50)
+            return
+        
+        # Create figure with proper sizing
+        rows = (plot_count + 1) // 2
+        fig = Figure(figsize=(10, 4.5 * rows), facecolor=self.colors['bg_card'], dpi=100)
+        
+        for idx, (title, data, thresholds) in enumerate(plots_data):
+            ax = fig.add_subplot(rows, 2, idx + 1)
+            
+            # Line plot
+            readings = list(range(1, len(data) + 1))
+            ax.plot(readings, data, marker='o', linewidth=2.5, markersize=10, color=self.colors['primary'])
+            
+            # Add threshold lines
+            if len(thresholds) >= 3:
+                ax.axhline(y=thresholds[1], color=self.colors['success'], linestyle='--', alpha=0.6, linewidth=2, label='Good')
+                ax.axhline(y=thresholds[2], color=self.colors['warning'], linestyle='--', alpha=0.6, linewidth=2, label='Moderate')
+            
+            ax.set_title(title, fontsize=13, fontweight='bold', color=self.colors['text_primary'], pad=10)
+            ax.set_xlabel('Reading #', fontsize=11, color=self.colors['text_secondary'])
+            ax.set_ylabel('Value', fontsize=11, color=self.colors['text_secondary'])
+            ax.grid(True, alpha=0.3, linestyle='--')
+            ax.legend(fontsize=9, loc='best')
+            
+            # Style
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.tick_params(colors=self.colors['text_secondary'], labelsize=10)
+        
+        fig.tight_layout(pad=2.5)
+        
+        # Embed in tkinter
+        canvas_widget = FigureCanvasTkAgg(fig, parent)
+        canvas_widget.draw()
+        canvas_widget.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
+    
+    def create_water_quality_graphs(self, parent):
+        """Create graphs for water quality data"""
+        df = self.current_data
+        params = {k.lower(): k for k in df.columns}
+        
+        plot_count = 0
+        plots_data = []
+        
+        # Collect available parameters
+        if 'ph' in params:
+            plots_data.append(('pH Level', df[params['ph']], [6.0, 6.5, 8.5, 9.0]))
+            plot_count += 1
+        
+        if 'temp' in params or 'temperature' in params:
+            col = params.get('temp', params.get('temperature'))
+            plots_data.append(('Temperature (°C)', df[col], [5, 10, 25, 30]))
+            plot_count += 1
+        
+        if 'do' in params or 'dissolved_oxygen' in params:
+            col = params.get('do', params.get('dissolved_oxygen'))
+            plots_data.append(('Dissolved Oxygen (mg/L)', df[col], [0, 4, 6]))
+            plot_count += 1
+        
+        if 'turbidity' in params:
+            plots_data.append(('Turbidity (NTU)', df[params['turbidity']], [0, 5, 25]))
+            plot_count += 1
+        
+        if 'tds' in params:
+            plots_data.append(('TDS (mg/L)', df[params['tds']], [0, 300, 600]))
+            plot_count += 1
+        
+        if plot_count == 0:
+            tk.Label(
+                parent,
+                text="No compatible parameters found for graphing.",
+                font=('Segoe UI', 12),
+                bg=self.colors['bg_card'],
+                fg=self.colors['text_secondary']
+            ).pack(expand=True, pady=50)
+            return
+        
+        # Create figure with proper sizing
+        rows = (plot_count + 1) // 2
+        fig = Figure(figsize=(10, 4.5 * rows), facecolor=self.colors['bg_card'], dpi=100)
+        
+        for idx, (title, data, thresholds) in enumerate(plots_data):
+            ax = fig.add_subplot(rows, 2, idx + 1)
+            
+            # Line plot
+            readings = list(range(1, len(data) + 1))
+            ax.plot(readings, data, marker='o', linewidth=2.5, markersize=10, color=self.colors['primary'])
+            
+            # Add threshold lines
+            if len(thresholds) >= 3:
+                if 'pH' in title:
+                    ax.axhline(y=thresholds[1], color=self.colors['success'], linestyle='--', alpha=0.6, linewidth=2, label='Good Min')
+                    ax.axhline(y=thresholds[2], color=self.colors['success'], linestyle='--', alpha=0.6, linewidth=2, label='Good Max')
+                else:
+                    ax.axhline(y=thresholds[1], color=self.colors['success'], linestyle='--', alpha=0.6, linewidth=2, label='Good')
+                    ax.axhline(y=thresholds[2], color=self.colors['warning'], linestyle='--', alpha=0.6, linewidth=2, label='Moderate')
+            
+            ax.set_title(title, fontsize=13, fontweight='bold', color=self.colors['text_primary'], pad=10)
+            ax.set_xlabel('Reading #', fontsize=11, color=self.colors['text_secondary'])
+            ax.set_ylabel('Value', fontsize=11, color=self.colors['text_secondary'])
+            ax.grid(True, alpha=0.3, linestyle='--')
+            ax.legend(fontsize=9, loc='best')
+            
+            # Style
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.tick_params(colors=self.colors['text_secondary'], labelsize=10)
+        
+        fig.tight_layout(pad=2.5)
+        
+        # Embed in tkinter
+        canvas_widget = FigureCanvasTkAgg(fig, parent)
+        canvas_widget.draw()
+        canvas_widget.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
+
 
 if __name__ == "__main__":
     root = tk.Tk()
